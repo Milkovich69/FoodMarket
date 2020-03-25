@@ -64,10 +64,10 @@
                         <a class="nav-link" href="{{ url_for('products_catalog') }}">Каталог продуктов</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="">Обмен продуктами</a>
+                        <a class="nav-link" href="{{ url_for('exchange') }}">Обмен продуктами</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('user', username=current_user.username) }}">Профиль</a>
+                        <a class="nav-link" href="{{ url_for('user', username=current_user.username) }}">Мой профиль</a>
                     </li>
                     <li>
                         <a class="nav-link" href="{{ url_for('messages') }}">
@@ -83,6 +83,9 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.index') }}">Для администратора</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('logout') }}">Выйти</a>
                     </li>
                 {% endif %}
@@ -96,11 +99,11 @@
     <div class="container">
         {% with messages = get_flashed_messages() %}
         {% if messages %}
-        <ul>
             {% for message in messages %}
-            <li>{{ message }}</li>
+            <div class="alert alert-danger" role="alert">
+                <h5 align="center">{{ message }}</h5>
+            </div>
             {% endfor %}
-        </ul>
         {% endif %}
         {% endwith %}
     </div>

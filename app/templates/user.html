@@ -9,7 +9,11 @@
                     <img src="{{ user.avatar(256) }}" class="img-thumbnail img-fluid rounded-circle rounded mx-auto d-block">
                 </td>
                 <td scope="col" width="450px">
-                    <h2>Пользователь: {{ user.username }}</h2>
+                    {% if user.status == 'Производитель' %}
+                        <h2>Производитель: {{ user.username }}</h2>
+                    {% else %}
+                        <h2>Пользователь: {{ user.username }}</h2>
+                    {% endif %}
                     {% if user.last_name %}<p><b>Фамилия:</b> {{ user.last_name }}</p>{% endif %}
                     {% if user.first_name %}<p><b>Имя:</b> {{ user.first_name }}</p>{% endif %}
                     {% if user.city_id %}<p><b>Город:</b> {{ city.name }}</p>{% endif %}
@@ -59,12 +63,147 @@
         </table>
     </div>
     <hr>
+    {% if user.status == 'Производитель' %}
+        <h1 align="center">Мои поставки</h1>
+        {% if user.company.first() and user.company.first().supplies.all() %}
+            <div class="card-deck justify-content-center">
+                {% for supply in user.company.first().supplies.all() %}
+                    <div class="col-sm-12 col-md-6 col-lg-4">
+                        <div class="card" style="width: 20rem;">
+                            <img class="card-img-top img-fluid rounded mx-auto d-block"
+                                 src="https://img.icons8.com/ios/500/meal.png"
+                                 alt="Card image cap">
+                            <div class="card-body">
+                                <h4 class="card-title">
+                                    {% for product in products %}
+                                        {% if product.id == supply.product_id %}
+                                            {{ product.name }}
+                                        {% endif %}
+                                    {% endfor %}
+                                </h4>
+                                <p class="card-text">
+                                    <b>Категория товара:</b>
+                                    {% for group in groups %}
+                                        {% for product in products %}
+                                            {% if product.id == supply.product_id and group.id == product.group_id %}
+                                                {{ group.name }}
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endfor %}<br>
+                                    <b>Наименование:</b> {{ supply.name }}<br>
+                                    <b>Цена:</b> {{ supply.price }}
+                                </p>
+                                {% if current_user.status == 'Потребитель' %}
+                                    <a href="{{ url_for('add_capability', id=supply.id) }}" onclick="sendID('capability', {{ supply.id }})"
+                                       class="btn btn-primary btn-block"
+                                       style="display: flex; justify-content: center;">Добавить в мои возможности</a>
+                                    <a href="{{ url_for('add_need', id=supply.id) }}" onclick="sendID('need', {{ supply.id }})"
+                                       class="btn btn-primary btn-block"
+                                       style="display: flex; justify-content: center;">Добавить в мои потребности</a>
+                                {% else %}
+                                    <a href="" class="btn btn-primary btn-block" onclick="sendIDToDelete('supply', {{ supply.id }})"
+                                       style="display: flex; justify-content: center;">Удалить</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <h2 align="center">Пока ни одной поставки</h2>
+        {% endif %}
+    {% else %}
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead>
+                <tr>
+                    <th scope="col" width="50%">
+                        <h3 align="center">Мои возможности:</h3>
+                    </th>
+                    <th scope="col" width="50%">
+                        <h3 align="center">Мои потребности:</h3>
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td scope="col">
+                        {% if capabilities %}
+                        <div class="card-deck">
+                            {% for capability in capabilities %}
+                                <div class="col-sm-12 col-md-12 col-lg-6">
+                                    <div class="card" style="width: 15rem;">
+                                        <div class="card-body">
+                                            <h4 class="card-title">
+                                                {{ capability.cap_product.name }}
+                                            </h4>
+                                            <p class="card-text">
+                                                <b>Производитель:</b>
+                                                <a href="{{ url_for('user', username=capability.cap_product.company.agent.username) }}">
+                                                {{ capability.cap_product.company.name }}</a>
+                                                <br>
+                                                <b>Цена:</b> {{ capability.cap_product.price }}<br>
+                                                <b>Мера:</b> {{ capability.cap_product.product.measure }}<br>
+                                                <b>Количество:</b> {{ capability.amount }}
+                                            </p>
+                                                {% if user == current_user %}
+                                                    <a href="" class="btn btn-primary btn-block"
+                                                    onclick="sendIDToDelete('capability', {{ capability.cap_product.id }})">Удалить</a>
+                                                {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </td>
+                    <td scope="col">
+                        {% if needs %}
+                        <div class="card-deck">
+                            {% for need in needs %}
+                                <div class="col-sm-12 col-md-12 col-lg-6">
+                                    <div class="card" style="width: 15rem;">
+                                        <div class="card-body">
+                                            <h4 class="card-title">
+                                                {{ need.need_product.name }}
+                                            </h4>
+                                            <p class="card-text">
+                                                <b>Производитель:</b>
+                                                <a href="{{ url_for('user', username=need.need_product.company.agent.username) }}">
+                                                    {{ need.need_product.company.name }}</a>
+                                                <br>
+                                                <b>Цена:</b> {{ need.need_product.price }}<br>
+                                                <b>Мера:</b> {{ need.need_product.product.measure }}<br>
+                                                <b>Количество:</b> {{ need.amount }}
+                                            </p>
+                                                {% if user == current_user %}
+                                                    <a href="" class="btn btn-primary btn-block"
+                                                    onclick="sendIDToDelete('need', {{ need.need_product.id }})">Удалить</a>
+                                                {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
 </div>
 <script>
-    function sendID(name, ID) {
+    function sendIDToDelete(name, ID) {
         let x = new Object();
         x[name] = ID;
         $.post('{{ url_for('user', username=current_user.username) }}', x);
+    }
+
+    function sendID(name, ID) {
+        let x = new Object();
+        x[name] = ID;
+        $.post('{{ url_for('product', id=1) }}', x);
     }
 </script>
 {% endblock %}

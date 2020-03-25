@@ -69,7 +69,15 @@ class AddSupplyForm(FlaskForm):
     for product in products:
         a.append((str(product.id), product.name))
     product = SelectField('Вид продукта', choices=a)
+    name = StringField('Название')
     price = IntegerField('Цена')
+    submit = SubmitField('Добавить')
+
+
+class AddProductToUserForm(FlaskForm):
+    name = StringField('Название')
+    price = IntegerField('Цена')
+    amount = IntegerField('Количество')
     submit = SubmitField('Добавить')
 
 

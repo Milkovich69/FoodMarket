@@ -14,32 +14,35 @@
 </div>
 <div class="container">
     <h2 align="center">Наши производители</h2>
-    <div class="card-deck justify-content-center">
-        {% for user in users %}
-        <div class="col-sm-12 col-md-6 col-lg-4">
-            <div class="card" style="width: 15rem;">
-                <img class="card-img-top img-fluid rounded mx-auto d-block"
-                     src="{{ user.avatar(128) }}" alt="Card image cap">
-                <div class="card-body">
-                    <h4 class="card-title">{{ user.username }}</h4>
-                    <p class="card-text">
-                        <b>Город: </b>
-                        {% for city in cities %}
-                            {% if city.id == user.city_id %}
-                                {{ city.name }}
-                            {% endif %}
-                        {% endfor %}
-                        <br>
-                        <b>Организация: </b>
-                        {{ user.company.first().name }}
-                    </p>
-                     <a href="{{url_for('user', username=user.username) }}" class="btn btn-primary btn-block"
-                       style="display: flex; justify-content: center;">Перейти</a>
+    {% if users %}
+        <div class="card-deck justify-content-center">
+            {% for user in users %}
+            <div class="col-sm-12 col-md-6 col-lg-4">
+                <div class="card" style="width: 15rem;">
+                    <img class="card-img-top img-fluid rounded mx-auto d-block"
+                         src="{{ user.avatar(128) }}" alt="Card image cap">
+                    <div class="card-body">
+                        <h4 class="card-title">{{ user.username }}<br>
+                        {% if user == current_user %}
+                            (это Вы)
+                        {% endif %}</h4>
+                        <p class="card-text">
+                            <b>Фамилия:</b> {{ user.last_name }}<br>
+                            <b>Имя:</b> {{ user.first_name }}<br>
+                            <b>Город: </b> {{ user.from_city.name }}<br>
+                            <b>Организация: </b>
+                            {{ user.company.first().name }}
+                        </p>
+                        <a href="{{url_for('user', username=user.username) }}" class="btn btn-primary btn-block"
+                           style="display: flex; justify-content: center;">Перейти</a>
+                    </div>
                 </div>
             </div>
+            {% endfor %}
         </div>
-        {% endfor %}
-    </div>
+    {% else %}
+        <h3 align="center">Пока нет ни одного производителя в этом городе</h3>
+    {% endif %}
 </div>
 
 {% endblock %}

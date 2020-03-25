@@ -12,24 +12,19 @@
                          src="https://img.icons8.com/ios/500/meal.png"
                          alt="Card image cap">
                     <div class="card-body">
-                        <h4 class="card-title">{{ product.name }}</h4>
+                        <h4 class="card-title"> {{ supply.product.name }}</h4>
                         <p class="card-text">
-                            <b>Поставщик:</b>
-                            {% for company in companies %}
-                                {% if company.id == supply.company_id %}
-                                    {{ company.name }}
-                                {% endif %}
-                            {% endfor %}<br>
-                            <b>Категория товара:</b>
-                            {% for group in groups %}
-                                {% if group.id == product.group_id %}
-                                    {{ group.name }}
-                                {% endif %}
-                            {% endfor %}<br>
+                            <b>Производитель:</b> {{ supply.company.name }}<br>
+                            <b>Категория товара:</b> {{ supply.product.by_group.name }}<br>
+                            <b>Наименование:</b> {{ supply.name }}<br>
                             <b>Цена:</b> {{ supply.price }}
                         </p>
                         {% if current_user.status == 'Потребитель' %}
-                             <a href="" class="btn btn-primary btn-block"
+                            <a href="{{ url_for('add_capability', id=supply.id) }}" class="btn btn-primary btn-block"
+                               style="display: flex; justify-content: center;"
+                               onclick="sendID('capability', {{ supply.id }})">Добавить в мои возможности</a>
+                            <a href="{{ url_for('add_need', id=supply.id) }}" class="btn btn-primary btn-block"
+                               onclick="sendID('need', {{ supply.id }})"
                                style="display: flex; justify-content: center;">Добавить в мои потребности</a>
                         {% endif %}
                     </div>
@@ -41,4 +36,11 @@
         <h2 align="center">Пока ни одной поставки</h2>
     {% endif %}
 </div>
+<script>
+    function sendID(name, ID) {
+        let x = new Object();
+        x[name] = ID;
+        $.post('{{ url_for('user', username=current_user.username) }}', x);
+    }
+</script>
 {% endblock %}

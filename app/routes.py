@@ -2,7 +2,7 @@
 from app import app, db
 from flask import render_template, flash, redirect, url_for, request, jsonify
 from .forms import LoginForm, CitySelectionForm, RegistrationForm, EditProfileForm, \
-    CompanyRegistrationForm, ProductGroupSelectionForm, AddSupplyForm, MessageForm
+    CompanyRegistrationForm, ProductGroupSelectionForm, AddSupplyForm, AddProductToUserForm, MessageForm
 from flask_login import current_user, login_user, logout_user, login_required
 from .models import User, City, ProductGroup, Product, Company,\
     Capability, Need, Supply, Message, Notification
@@ -16,12 +16,11 @@ from datetime import datetime
 def index():
     form = CitySelectionForm()
     users = User.query.filter_by(status='Производитель')
-    cities = City.query.all()
     if form.validate_on_submit():
         sel = form.city.data
         if sel != '0':
             users = User.query.filter_by(status='Производитель', city_id=sel).all()
-    return render_template('index.html', form=form, users=users, cities=cities)
+    return render_template('index.html', form=form, users=users)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -69,17 +68,25 @@ def register():
 def user(username):
     user = User.query.filter_by(username=username).first_or_404()
     city = City.query.filter_by(id=user.city_id).first_or_404()
-    #capabilities = Capability.query.filter_by(user_id=user.id).all()
-    #needs = Need.query.filter_by(user_id=user.id).all()
-    '''result = dict(request.form)
+    groups = ProductGroup.query.all()
+    products = Product.query.all()
+    supplies = Supply.query.all()
+    capabilities = user.capabilities.all()
+    needs = user.needs.all()
+    result = dict(request.form)
     if result:
         for key, value in result.items():
-            if key == 'capability':
-                Capability.query.filter_by(id=value).delete()
+            if key == 'supply':
+                Supply.query.filter_by(id=value).delete()
+            elif key == 'capability':
+                Capability.query.filter_by(user_id=current_user.id, product_id=value).delete()
             else:
-                Need.query.filter_by(id=value).delete()
-        db.session.commit()'''
-    return render_template('user.html', title='Профиль пользователя', user=user, city=city)
+                Need.query.filter_by(user_id=current_user.id, product_id=value).delete()
+            db.session.commit()
+            flash('Удалено!')
+    return render_template('user.html', title='Профиль пользователя', user=user, city=city,
+                           groups=groups, products=products, capabilities=capabilities, needs=needs,
+                           supplies=supplies)
 
 
 @app.route('/edit_profile', methods=['GET', 'POST'])
@@ -136,37 +143,99 @@ def edit_company():
 @app.route('/products_catalog', methods=['GET', 'POST'])
 def products_catalog():
     form = ProductGroupSelectionForm()
-    groups = ProductGroup.query.all()
     products = Product.query.all()
     if form.validate_on_submit():
         sel = form.group.data
         if sel != '0':
             products = Product.query.filter_by(group_id=sel).all()
     return render_template('products_catalog.html', title='Каталог продуктов', form=form,
-                           products=products, groups=groups)
+                           products=products)
 
 
 @app.route('/product/<id>', methods=['GET', 'POST'])
 def product(id):
-    supplies = Supply.query.filter_by(product_id=id).all()
     product = Product.query.filter_by(id=id).first_or_404()
-    companies = Company.query.all()
-    groups = ProductGroup.query.all()
-    return render_template('product.html', title='Продукт', supplies=supplies, product=product,
-                           companies=companies, groups=groups)
+    supplies = Supply.query.filter_by(product_id=id).all()
+    result = dict(request.form)
+    if result:
+        for key, value in result.items():
+            if key == 'capability':
+                return redirect(url_for('add_capability', id=value))
+            else:
+                return redirect(url_for('add_need', id=value))
+    return render_template('product.html', title='Продукт', supplies=supplies, product=product)
 
 
 @app.route('/add_supply', methods=['GET', 'POST'])
 def add_supply():
     form = AddSupplyForm()
     if form.validate_on_submit():
-        supply = Supply(company_id=current_user.company.first().id,
-                        product_id=form.product.data, price=form.price.data)
+        supply = Supply(id=Supply.query.count()+1, company_id=current_user.company.first().id,
+                        product_id=form.product.data,
+                        name=form.name.data, price=form.price.data)
         db.session.add(supply)
         db.session.commit()
         flash('Поставка добавлена!')
         return redirect(url_for('user', username=current_user.username))
     return render_template('add_supply.html', title='Добавление поставки', form=form)
+
+
+@app.route('/add_capability/<id>', methods=['GET', 'POST'])
+def add_capability(id):
+    form = AddProductToUserForm()
+    user = current_user
+    if form.validate_on_submit():
+        if user.needs.filter_by(product_id=id).count() == 0:
+            if user.capabilities.filter_by(product_id=id).count() == 0:
+                prod = Capability(user_id=user.id, product_id=id, amount=form.amount.data)
+                db.session.add(prod)
+            else:
+                user.capabilities.filter_by(product_id=id).first().amount += form.amount.data
+            db.session.commit()
+            flash('Продукт добавлен!')
+        else:
+            flash('Вы не можете добавить продукт в список ваших возможностей, '
+                  'так как он уже есть среди ваших потребностей!')
+        return redirect(url_for('product', id=Supply.query.filter_by(id=id).first().product_id))
+    elif request.method == 'GET':
+        form.name.data = Supply.query.filter_by(id=id).first().name
+        form.price.data = Supply.query.filter_by(id=id).first().price
+    return render_template('add_product.html', title='Добавление продукта в возможности', form=form)
+
+
+@app.route('/add_need/<id>', methods=['GET', 'POST'])
+def add_need(id):
+    form = AddProductToUserForm()
+    user = current_user
+    if form.validate_on_submit():
+        if user.capabilities.filter_by(product_id=id).count() == 0:
+            if user.needs.filter_by(product_id=id).count() == 0:
+                prod = Need(user_id=user.id, product_id=id, amount=form.amount.data)
+                db.session.add(prod)
+            else:
+                user.needs.filter_by(product_id=id).first().amount += form.amount.data
+            db.session.commit()
+            flash('Продукт добавлен!')
+        else:
+            flash('Вы не можете добавить продукт в список ваших потребностей, '
+                  'так как он уже есть среди ваших возможностей!')
+        return redirect(url_for('product', id=Supply.query.filter_by(id=id).first().product_id))
+    elif request.method == 'GET':
+        form.name.data = Supply.query.filter_by(id=id).first().name
+        form.price.data = Supply.query.filter_by(id=id).first().price
+    return render_template('add_product.html', title='Добавление продукта в потребности', form=form)
+
+
+@app.route('/exchange', methods=['GET', 'POST'])
+@login_required
+def exchange():
+    form = CitySelectionForm()
+    users = User.query.filter_by(status='Потребитель')
+    if form.validate_on_submit():
+        sel = form.city.data
+        if sel != '0':
+            users = User.query.filter_by(status='Потребитель', city_id=sel).all()
+    return render_template('exchange.html', form=form, users=users)
 
 
 @app.route('/send_message/<recipient>', methods=['GET', 'POST'])

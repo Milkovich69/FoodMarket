@@ -3,7 +3,7 @@ from hashlib import md5
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin, current_user
 from flask_admin.contrib.sqla import ModelView
-from flask import redirect, url_for
+from flask import redirect, url_for,flash
 from datetime import datetime
 import json
 from time import time
@@ -97,8 +97,6 @@ class Product(db.Model):
     name = db.Column(db.String(100), index=True)
     measure = db.Column(db.String(16))
     group_id = db.Column(db.Integer, db.ForeignKey('product_group.id'))
-    capabilities = db.relationship('Capability', backref='product', lazy='dynamic')
-    needs = db.relationship('Need', backref='product', lazy='dynamic')
     supplies = db.relationship('Supply', backref='product', lazy='dynamic')
 
     def __repr__(self):
@@ -107,20 +105,24 @@ class Product(db.Model):
 
 class Capability(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
-    product_id = db.Column(db.Integer, db.ForeignKey('product.id'), primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('supply.id'), primary_key=True)
     amount = db.Column(db.Integer)
 
 
 class Need(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
-    product_id = db.Column(db.Integer, db.ForeignKey('product.id'), primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('supply.id'), primary_key=True)
     amount = db.Column(db.Integer)
 
 
 class Supply(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
     company_id = db.Column(db.Integer, db.ForeignKey('company.id'), primary_key=True)
     product_id = db.Column(db.Integer, db.ForeignKey('product.id'), primary_key=True)
+    name = db.Column(db.String(100), index=True)
     price = db.Column(db.Integer)
+    capabilities = db.relationship('Capability', backref='cap_product', lazy='dynamic')
+    needs = db.relationship('Need', backref='need_product', lazy='dynamic')
 
 
 class Message(db.Model):
@@ -147,17 +149,25 @@ class Notification(db.Model):
 
 class MyModelView(ModelView):
     def is_accessible(self):
-        return current_user.id == 1
+        if not current_user.is_anonymous:
+            return current_user.id == 1
 
     def inaccessible_callback(self, name, **kwargs):
+        if not current_user.is_anonymous:
+            if current_user.id != 1:
+                flash('У вас нет доступа к этой странице, так как Вы не администратор!')
         return redirect(url_for('login'))
 
 
 class MyAdminIndexView(AdminIndexView):
     def is_accessible(self):
-        return current_user.id == 1
+        if not current_user.is_anonymous:
+            return current_user.id == 1
 
     def inaccessible_callback(self, name, **kwargs):
+        if not current_user.is_anonymous:
+            if current_user.id != 1:
+                flash('У вас нет доступа к этой странице, так как Вы не администратор!')
         return redirect(url_for('login'))
 
 
@@ -165,7 +175,11 @@ class MyUserAdmin(ModelView):
     column_exclude_list = ('password_hash',)
 
     def is_accessible(self):
-        return current_user.id == 1
+        if not current_user.is_anonymous:
+            return current_user.id == 1
 
     def inaccessible_callback(self, name, **kwargs):
+        if not current_user.is_anonymous:
+            if current_user.id != 1:
+                flash('У вас нет доступа к этой странице, так как Вы не администратор!')
         return redirect(url_for('login'))

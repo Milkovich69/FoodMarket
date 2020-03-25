@@ -94,4 +94,4 @@ if Product.query.count() == 0:
         db.session.add(product)
     db.session.commit()
 
-from . import routes, models
+from . import routes, models, errors

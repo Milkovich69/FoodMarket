@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+<div class="container">
+    <h1 align="center">Произошла неожиданная ошибка!</h1>
+    <p align="center">Администратор будет уведомлен. Приносим извинения за неудобства!</p>
+    <p><a class="btn btn-primary btn-lg btn-block" href="{{ url_for('index') }}">Назад</a></p>
+</div>
+{% endblock %}
