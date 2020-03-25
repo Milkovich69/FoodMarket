@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+<div class="container">
+    <h1 align="center">Сайт ассоциации местных производителей продуктов питания</h1>
+</div>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-12">
+            {{ wtf.quick_form(form, button_map={'submit': 'primary btn-block'}) }}
+        </div>
+    </div>
+</div>
+<div class="container">
+    <h2 align="center">Наши производители</h2>
+    <div class="card-deck justify-content-center">
+        {% for user in users %}
+        <div class="col-sm-12 col-md-6 col-lg-4">
+            <div class="card" style="width: 15rem;">
+                <img class="card-img-top img-fluid rounded mx-auto d-block"
+                     src="{{ user.avatar(128) }}" alt="Card image cap">
+                <div class="card-body">
+                    <h4 class="card-title">{{ user.username }}</h4>
+                    <p class="card-text">
+                        <b>Город: </b>
+                        {% for city in cities %}
+                            {% if city.id == user.city_id %}
+                                {{ city.name }}
+                            {% endif %}
+                        {% endfor %}
+                        <br>
+                        <b>Организация: </b>
+                        {{ user.company.first().name }}
+                    </p>
+                     <a href="{{url_for('user', username=user.username) }}" class="btn btn-primary btn-block"
+                       style="display: flex; justify-content: center;">Перейти</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}

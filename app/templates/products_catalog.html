@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+<div class="container">
+    <h1 align="center">Каталог продуктов</h1>
+    <div class="row justify-content-center">
+        <div class="col-md-12">
+            {{ wtf.quick_form(form, button_map={'submit': 'primary btn-block'}) }}
+        </div>
+    </div>
+</div>
+<div class="container">
+    <div class="card-deck justify-content-center">
+        {% for product in products %}
+        <div class="col-sm-12 col-md-6 col-lg-4">
+            <div class="card" style="width: 15rem;">
+                <img class="card-img-top img-fluid rounded mx-auto d-block"
+                     src="https://img.icons8.com/ios/500/meal.png"
+                     alt="Card image cap">
+                <div class="card-body">
+                    <h4 class="card-title">{{ product.name }}</h4>
+                    <p class="card-text">
+                        <b>Категория товара:</b>
+                        {% for group in groups %}
+                            {% if group.id == product.group_id %}
+                                {{ group.name }}
+                            {% endif %}
+                        {% endfor %}
+                    </p>
+                     <a href="{{ url_for('product', id=product.id) }}" class="btn btn-primary btn-block"
+                       style="display: flex; justify-content: center;">Просмотр</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

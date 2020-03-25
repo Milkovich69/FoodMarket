@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+<div class="container">
+    <h1 align="center">{{ product.name }} - Все поставки</h1>
+    {% if supplies %}
+        <div class="card-deck justify-content-center">
+            {% for supply in supplies %}
+            <div class="col-sm-12 col-md-6 col-lg-4">
+                <div class="card" style="width: 20rem;">
+                    <img class="card-img-top img-fluid rounded mx-auto d-block"
+                         src="https://img.icons8.com/ios/500/meal.png"
+                         alt="Card image cap">
+                    <div class="card-body">
+                        <h4 class="card-title">{{ product.name }}</h4>
+                        <p class="card-text">
+                            <b>Поставщик:</b>
+                            {% for company in companies %}
+                                {% if company.id == supply.company_id %}
+                                    {{ company.name }}
+                                {% endif %}
+                            {% endfor %}<br>
+                            <b>Категория товара:</b>
+                            {% for group in groups %}
+                                {% if group.id == product.group_id %}
+                                    {{ group.name }}
+                                {% endif %}
+                            {% endfor %}<br>
+                            <b>Цена:</b> {{ supply.price }}
+                        </p>
+                        {% if current_user.status == 'Потребитель' %}
+                             <a href="" class="btn btn-primary btn-block"
+                               style="display: flex; justify-content: center;">Добавить в мои потребности</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <h2 align="center">Пока ни одной поставки</h2>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+<div class="container">
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <tr>
+                <td scope="col" width="300px">
+                    <img src="{{ user.avatar(256) }}" class="img-thumbnail img-fluid rounded-circle rounded mx-auto d-block">
+                </td>
+                <td scope="col" width="450px">
+                    <h2>Пользователь: {{ user.username }}</h2>
+                    {% if user.last_name %}<p><b>Фамилия:</b> {{ user.last_name }}</p>{% endif %}
+                    {% if user.first_name %}<p><b>Имя:</b> {{ user.first_name }}</p>{% endif %}
+                    {% if user.city_id %}<p><b>Город:</b> {{ city.name }}</p>{% endif %}
+                    {% if user.email %}<p><b>Email:</b> {{ user.email }}</p>{% endif %}
+                    {% if user.phone %}<p><b>Телефон:</b> {{ user.phone }}</p>{% endif %}
+                    {% if user.company.first() %}
+                        <p>
+                            <b>Организация:</b> {{ user.company.first().name }}<br>
+                            <b>Адрес организации:</b> {{ user.company.first().address }}
+                        </p>
+                    {% endif %}
+                    {% if user != current_user %}
+                        <p>
+                            <a class="btn btn-primary btn-block" href="{{ url_for('send_message',
+                                                recipient=user.username) }}">
+                                Отправить личное сообщение
+                            </a>
+                        </p>
+                    {% else %}
+                        <p>
+                            <a class="btn btn-primary btn-block" href="{{ url_for('edit_profile') }}">
+                                Редактировать информацию о себе
+                            </a>
+                        </p>
+                        {% if user.status == 'Производитель' and not user.company.first() %}
+                            <p>
+                                <a class="btn btn-primary btn-block" href="{{ url_for('company_register') }}">
+                                    Зарегистрировать свою организацию
+                                </a>
+                            </p>
+                        {% endif %}
+                        {% if user.status == 'Производитель' and user.company.first() %}
+                            <p>
+                                <a class="btn btn-primary btn-block" href="{{ url_for('edit_company') }}">
+                                    Редактировать информацию о моей организации
+                                </a>
+                            </p>
+                            <p>
+                                <a class="btn btn-primary btn-block" href="{{ url_for('add_supply') }}">
+                                    Добавить поставку продукта
+                                </a>
+                            </p>
+                        {% endif %}
+                    {% endif %}
+                </td>
+            </tr>
+        </table>
+    </div>
+    <hr>
+</div>
+<script>
+    function sendID(name, ID) {
+        let x = new Object();
+        x[name] = ID;
+        $.post('{{ url_for('user', username=current_user.username) }}', x);
+    }
+</script>
+{% endblock %}
