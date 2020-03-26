@@ -177,6 +177,8 @@
                                                 <b>Количество:</b> {{ need.amount }}
                                             </p>
                                                 {% if user == current_user %}
+                                                    <a href="{{ url_for('add_order', id=need.need_product.id) }}" class="btn btn-primary btn-block"
+                                                    onclick="sendIDToAddOrder('order', {{ need.need_product.id }})">Оформить заказ</a>
                                                     <a href="" class="btn btn-primary btn-block"
                                                     onclick="sendIDToDelete('need', {{ need.need_product.id }})">Удалить</a>
                                                 {% endif %}
@@ -204,6 +206,12 @@
         let x = new Object();
         x[name] = ID;
         $.post('{{ url_for('product', id=1) }}', x);
+    }
+
+    function sendIDToAddOrder(name, ID) {
+        let x = new Object();
+        x[name] = ID;
+        $.post('{{ url_for('user', username=current_user.username) }}', x);
     }
 </script>
 {% endblock %}

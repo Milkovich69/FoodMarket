@@ -75,10 +75,21 @@ class AddSupplyForm(FlaskForm):
 
 
 class AddProductToUserForm(FlaskForm):
-    name = StringField('Название')
-    price = IntegerField('Цена')
+    name = StringField('Название', render_kw={'disabled': 'disabled'})
+    price = IntegerField('Цена', render_kw={'disabled': 'disabled'})
     amount = IntegerField('Количество')
     submit = SubmitField('Добавить')
+
+
+class AddOrderForm(FlaskForm):
+    customer_last_name = StringField('Фамилия заказчика')
+    customer_first_name = StringField('Имя заказчика')
+    customer_phone = StringField('Телефон заказчика')
+    company_name = StringField('Производитель', render_kw={'disabled': 'disabled'})
+    product_name = StringField('Название продукта', render_kw={'disabled': 'disabled'})
+    product_price = IntegerField('Цена продукта', render_kw={'disabled': 'disabled'})
+    product_amount = IntegerField('Количество')
+    submit = SubmitField('Отправить')
 
 
 class EditProfileForm(FlaskForm):

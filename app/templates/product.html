@@ -40,7 +40,7 @@
     function sendID(name, ID) {
         let x = new Object();
         x[name] = ID;
-        $.post('{{ url_for('user', username=current_user.username) }}', x);
+        $.post('{{ url_for('product', id=product.id) }}', x);
     }
 </script>
 {% endblock %}

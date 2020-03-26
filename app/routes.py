@@ -2,10 +2,11 @@
 from app import app, db
 from flask import render_template, flash, redirect, url_for, request, jsonify
 from .forms import LoginForm, CitySelectionForm, RegistrationForm, EditProfileForm, \
-    CompanyRegistrationForm, ProductGroupSelectionForm, AddSupplyForm, AddProductToUserForm, MessageForm
+    CompanyRegistrationForm, ProductGroupSelectionForm, AddSupplyForm, AddProductToUserForm,\
+    AddOrderForm, MessageForm
 from flask_login import current_user, login_user, logout_user, login_required
 from .models import User, City, ProductGroup, Product, Company,\
-    Capability, Need, Supply, Message, Notification
+    Capability, Need, Supply, Order, Message, Notification
 from werkzeug.urls import url_parse
 from datetime import datetime
 
@@ -80,8 +81,10 @@ def user(username):
                 Supply.query.filter_by(id=value).delete()
             elif key == 'capability':
                 Capability.query.filter_by(user_id=current_user.id, product_id=value).delete()
-            else:
+            elif key == 'need':
                 Need.query.filter_by(user_id=current_user.id, product_id=value).delete()
+            else:
+                return redirect(url_for('add_order', id=value))
             db.session.commit()
             flash('Удалено!')
     return render_template('user.html', title='Профиль пользователя', user=user, city=city,
@@ -226,6 +229,36 @@ def add_need(id):
     return render_template('add_product.html', title='Добавление продукта в потребности', form=form)
 
 
+@app.route('/add_order/<id>', methods=['GET', 'POST'])
+def add_order(id):
+    form = AddOrderForm()
+    user = current_user
+    product = user.needs.filter_by(product_id=id).first()
+    if form.validate_on_submit():
+        order = Order(customer_id=user.id,
+                      customer_last_name=form.customer_last_name.data,
+                      customer_first_name=form.customer_first_name.data,
+                      customer_phone=form.customer_phone.data,
+                      company_id=product.need_product.company.id,
+                      company_name=product.need_product.company.name,
+                      product_name=product.need_product.name,
+                      product_price=product.need_product.price,
+                      product_amount=form.product_amount.data)
+        db.session.add(order)
+        db.session.commit()
+        flash('Ваш заказ добавлен, с вами свяжутся!')
+        return redirect(url_for('user', username=user.username))
+    elif request.method == 'GET':
+        form.customer_last_name.data = user.last_name
+        form.customer_first_name.data = user.first_name
+        form.customer_phone.data = user.phone
+        form.company_name.data = product.need_product.company.name
+        form.product_name.data = product.need_product.name
+        form.product_price.data = product.need_product.price
+        form.product_amount.data = product.amount
+    return render_template('add_order.html', title='Оформление заказа', form=form)
+
+
 @app.route('/exchange', methods=['GET', 'POST'])
 @login_required
 def exchange():
@@ -236,6 +269,16 @@ def exchange():
         if sel != '0':
             users = User.query.filter_by(status='Потребитель', city_id=sel).all()
     return render_template('exchange.html', form=form, users=users)
+
+
+@app.route('/all_orders', methods=['GET', 'POST'])
+@login_required
+def all_orders():
+    if current_user.status == 'Производитель':
+        orders = Order.query.all()
+    else:
+        orders = Order.query.filter_by(customer_id=current_user.id).all()
+    return render_template('all_orders.html', title='Заказы', orders=orders)
 
 
 @app.route('/send_message/<recipient>', methods=['GET', 'POST'])

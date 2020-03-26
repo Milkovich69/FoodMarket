@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+<div class="container">
+    <h1 align="center">
+        {% if current_user.status == 'Производитель' %}
+            Все заказы пользователей
+        {% else %}
+            Ваши заказы
+        {% endif %}
+    </h1>
+</div>
+<div class="container">
+    <div class="table-responsive">
+            <table class="table table-bordered table-success">
+                <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Фамилия заказчика</th>
+                    <th>Имя заказчика</th>
+                    <th>Телефон заказчика</th>
+                    <th>Производитель</th>
+                    <th>Название продукта</th>
+                    <th>Цена</th>
+                    <th>Количество</th>
+                    <th>Общая сумма</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for order in orders %}
+                    <tr>
+                        <th>{{ order.id }}</th>
+                        <td>{{ order.customer_last_name }}</td>
+                        <td>{{ order.customer_first_name }}</td>
+                        <td>{{ order.customer_phone }}</td>
+                        <td>{{ order.company_name }}</td>
+                        <td>{{ order.product_name }}</td>
+                        <td align="center">{{ order.product_price }}</td>
+                        <td align="center">{{ order.product_amount }}</td>
+                        <td align="center">{{ order.product_price * order.product_amount }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+    </div>
+</div>
+{% endblock %}

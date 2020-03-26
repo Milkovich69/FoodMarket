@@ -125,6 +125,19 @@ class Supply(db.Model):
     needs = db.relationship('Need', backref='need_product', lazy='dynamic')
 
 
+class Order(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    customer_id = db.Column(db.Integer)
+    customer_last_name = db.Column(db.String(32))
+    customer_first_name = db.Column(db.String(32))
+    customer_phone = db.Column(db.String(32))
+    company_id = db.Column(db.Integer)
+    company_name = db.Column(db.String(100))
+    product_name = db.Column(db.String(100))
+    product_price = db.Column(db.Integer)
+    product_amount = db.Column(db.Integer)
+
+
 class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     sender_id = db.Column(db.Integer, db.ForeignKey('user.id'))
